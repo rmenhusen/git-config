@@ -1,0 +1,139 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
+#
+# Lazygit configuration with keybindings aligned to magit/forge where possible.
+#
+# Magit and lazygit have fundamentally different UI paradigms (transient
+# command dispatch vs. panel-based TUI), so this is a best-effort
+# alignment of single-key operations rather than a 1:1 mapping.
+#
+# Key mapping rationale (magit -> lazygit):
+#   s     = stage          (magit: s, lazygit default: <space>)
+#   u     = unstage        (magit: u, not available in lazygit files panel)
+#   k     = discard        (magit: k for kill/discard, lazygit default: d)
+#   x     = reset          (magit: x for reset, lazygit default: D)
+#   z     = stash          (magit: z, lazygit default: s in files)
+#   F     = pull           (magit: F, lazygit default: p)
+#   P     = push           (magit: P, lazygit default: P - already aligned)
+#   c     = commit         (magit: c c, lazygit default: c - already aligned)
+#   t     = revert         (magit: t, revert commit)
+#   b b   = checkout       (magit: b b, can't do multi-key in lazygit)
+#   l     = log            (magit: l)
+
+gui:
+    # Use nerd fonts for icons if available
+    nerdFontsVersion: "3"
+    showFileTree: true
+    showBranchCommitHash: true
+    expandFocusedSidePanel: true
+    showDivergenceFromBaseBranch: arrowAndNumber
+
+os:
+    editPreset: emacs
+
+keybinding:
+    universal:
+        # Emacs-style navigation where lazygit supports it.
+        # C-p/C-n/C-b/C-f aren't available as alt bindings, but
+        # arrow keys work by default. Disable vim j/k/h/l to avoid
+        # accidental navigation when expecting Emacs bindings.
+        prevItem-alt: <c-p>
+        nextItem-alt: <c-n>
+        prevBlock-alt: <c-b>
+        nextBlock-alt: <c-f>
+        scrollUpMain-alt1: <c-p>
+        scrollDownMain-alt1: <c-n>
+        scrollUpMain-alt2: <c-u>
+        scrollDownMain-alt2: <c-d>
+
+        # magit uses g for refresh (like magit-refresh)
+        refresh: g
+
+        # magit uses ? for help
+        optionMenu-alt1: '?'
+
+    files:
+        # magit: s = stage (replaces lazygit's toggle with explicit stage)
+        toggleStagedAll: S
+
+        # magit: c = commit
+        commitChanges: c
+        commitChangesWithEditor: C
+        amendLastCommit: A
+
+        # magit: z = stash (magit-stash)
+        stashAllChanges: z
+        viewStashOptions: Z
+
+        # magit: k = discard/kill changes
+        confirmDiscard: k
+
+        # magit: x = reset
+        viewResetOptions: x
+
+        # magit: F = pull/fetch
+        fetch: f
+
+        # magit: i = ignore
+        ignoreFile: i
+
+    branches:
+        # magit: c = checkout (b b in magit, but c is already checkout-by-name)
+        checkoutBranchByName: c
+
+        # magit: r = rebase (already default)
+        rebaseBranch: r
+
+        # magit: m = merge (M in lazygit default)
+        mergeIntoCurrentBranch: m
+
+        # magit: R = rename
+        renameBranch: R
+
+        # magit: f = fast-forward
+        fastForward: f
+
+        # magit: T = create tag
+        createTag: T
+
+        # magit: d = delete (same concept as magit-branch-delete)
+        # (already default via universal 'd' / remove)
+
+        # forge: create pull request
+        createPullRequest: o
+        viewPullRequestOptions: O
+
+    commits:
+        # magit: r = reword
+        renameCommit: r
+        renameCommitWithEditor: R
+
+        # magit: s = squash
+        squashDown: s
+
+        # magit: f = fixup
+        markCommitAsFixup: f
+
+        # magit: x = reset
+        viewResetOptions: x
+
+        # magit: A = amend
+        amendToCommit: A
+
+        # magit: t = revert (create revert commit)
+        revertCommit: t
+
+        # magit: v = cherry-pick / paste (apply)
+        cherryPickCopy: C
+        pasteCommits: V
+
+        # magit: p = pick (interactive rebase)
+        pickCommit: p
+
+        # magit: e = edit (interactive rebase)
+        startInteractiveRebase: i
+
+    stash:
+        # magit: a = apply stash
+        # (lazygit uses <space> for apply by default, g for pop)
+        popStash: g
+        renameStash: r
