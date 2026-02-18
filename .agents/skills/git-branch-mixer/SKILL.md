@@ -1,0 +1,74 @@
+---
+name: git-branch-mixer
+description: Manage git branch mixes and run mixdowns using ggmx and ggmxd. Use when the user says things like "add this branch to the mix", "remove a branch from the mix", "show the mix", "mix down the branches", or "run a mixdown".
+disable-model-invocation: true
+---
+
+# Git Branch Mixer
+
+`ggmx` (`git mix`) configures named sets of branches to merge together.
+`ggmxd` (`git mixdown`) executes a mixdown — resetting a target branch to a
+base and merging all the other branches in.
+
+The typical use case is testing a combination of feature/bugfix branches
+together via a throw-away temporary working branch.
+
+## Configuring mixes with `ggmx`
+
+```bash
+ggmx                          # show all configured mixes
+ggmx <target>                 # show branches in mix for <target>
+ggmx <target> A B C           # set mix for <target> to branches A, B, C
+                               # (first branch is the base)
+ggmx [<target>] +D [-B]       # add D to / remove B from mix for <target>
+                               # (defaults to 'working' if <target> omitted)
+ggmx -d <target>              # delete the mix for <target>
+```
+
+Mixes are stored in git config under `mixdown.<target>`.
+You can also edit them directly with `git config --edit`.
+
+## Running a mixdown with `ggmxd`
+
+```bash
+ggmxd                          # run mixdown using config for default target ('working')
+ggmxd -b <target>              # run mixdown using config for <target>
+ggmxd BASE B1 [B2 ...]         # explicit mixdown: reset to BASE, merge B1, B2...
+ggmxd -b <target> BASE B1 ...  # explicit mixdown into named target branch
+```
+
+**Always pass `-c` / `--checkout`** to leave the target branch checked out
+after the mixdown, ready for testing:
+
+```bash
+ggmxd -c                       # mixdown from config, stay on target branch
+ggmxd -c BASE B1 B2            # explicit mixdown, stay on target branch
+```
+
+Without `-c`, `ggmxd` restores your previously checked-out branch after
+completing the mixdown. Use this when you want to rebuild the mix in the
+background without switching away from your current branch.
+
+### Other options
+
+```bash
+ggmxd -s STRATEGY              # set merge strategy (default: octopus)
+                               # use e.g. -s recursive for sequential merges
+                               # with conflict resolution shells between each
+```
+
+## Typical workflow
+
+```bash
+# One-time setup: configure the mix for the 'working' target branch
+ggmx working main feature/foo bugfix/bar
+
+# Add another branch later
+ggmx +feature/baz
+
+# Run the mixdown and stay on the result for testing
+ggmxd -c
+
+# Rebuild after rebasing one of the branches
+ggmxd -c
+```
