@@ -57,6 +57,11 @@ ggmxd -s STRATEGY              # set merge strategy (default: octopus)
                                # with conflict resolution shells between each
 ```
 
+## After changing a mix
+
+After any `ggmx` operation that modifies a mix (adding, removing, or setting
+branches), always ask the user whether they want to run a mixdown now.
+
 ## Typical workflow
 
 ```bash
