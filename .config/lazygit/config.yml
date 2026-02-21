@@ -2,22 +2,52 @@
 #
 # Lazygit configuration with keybindings aligned to magit/forge where possible.
 #
-# Magit and lazygit have fundamentally different UI paradigms (transient
-# command dispatch vs. panel-based TUI), so this is a best-effort
-# alignment of single-key operations rather than a 1:1 mapping.
+# Lazygit is a panel-based TUI: left side has panels (Status, Files, Branches,
+# Commits, Stash), right side shows a diff/log. You navigate between panels
+# with arrow keys or C-b/C-f (remapped below). There are no transients; each
+# panel has its own flat set of single-key bindings, more like magit's section
+# commands than its transient prefixes.
 #
 # Key mapping rationale (magit -> lazygit):
-#   s     = stage          (magit: s, lazygit default: <space>)
-#   u     = unstage        (magit: u, not available in lazygit files panel)
-#   k     = discard        (magit: k for kill/discard, lazygit default: d)
-#   x     = reset          (magit: x for reset, lazygit default: D)
-#   z     = stash          (magit: z, lazygit default: s in files)
-#   F     = pull           (magit: F, lazygit default: p)
-#   P     = push           (magit: P, lazygit default: P - already aligned)
-#   c     = commit         (magit: c c, lazygit default: c - already aligned)
-#   t     = revert         (magit: t, revert commit)
-#   b b   = checkout       (magit: b b, can't do multi-key in lazygit)
-#   l     = log            (magit: l)
+#   g     = refresh       (magit: g, lazygit default: R)
+#   s     = stage         (magit: s, lazygit default: <space> toggle)
+#   S     = stage all     (magit: S, lazygit default: a toggle-all)
+#   k     = discard       (magit: k, lazygit default: x via options menu)
+#   x     = reset         (magit: x, lazygit default: g or D depending on panel)
+#   z     = stash         (magit: z prefix -> z z, lazygit default: s in files)
+#   Z     = stash options (magit: z prefix menu, lazygit: options popup)
+#   F     = pull          (magit: F prefix -> F u, lazygit default: p)
+#   P     = push          (magit: P prefix -> P u, lazygit default: P - aligned)
+#   c     = commit        (magit: c c, lazygit default: c - already aligned)
+#   C     = commit + open $EDITOR explicitly (no direct magit equivalent;
+#           magit's c c always uses $EDITOR; lazygit 'c' uses a popup)
+#   A     = amend HEAD    (magit: c a, lazygit default: A - already aligned)
+#   r     = reword        (magit: 'r' in rebase buffer, or 'r w' to initiate)
+#   r     = rebase branch (magit: r e; 'r' alone opens the rebase transient)
+#   s     = squash        (magit: s in rebase buffer, lazygit default: s - aligned)
+#   f     = fixup         (magit: f in rebase buffer, lazygit default: f - aligned)
+#   v     = revert        (magit: V V to create revert commit; 'v' matches
+#           the V transient mnemonic; toggleRangeSelect moved to <c-space>)
+#   t     = tag commit    (magit: t t; lazygit default T kept as alias)
+#   i     = ignore        (magit: i in files, lazygit default: i - aligned)
+#   b b   = checkout      (magit: b b; lazygit has no multi-key bindings, use c)
+#   o/O   = forge PR      (forge: ' = forge-dispatch; 'o'/'O' are lazygit
+#           defaults, kept despite clashing with magit's submodule/subtree)
+#
+# Unresolvable gaps (lazygit limitations):
+#   - magit 'x' (reset) cannot be rebound in the branches or stash panels;
+#     lazygit's config schema does not expose those bindings. 'g' there is
+#     taken by the global refresh mapping, so reset in those panels has no
+#     keyboard shortcut. Use the '?' help menu to find it.
+#   - magit 'z a' (apply stash, leave in list) has no rebindable key in
+#     lazygit's stash panel; apply is hardcoded to <space>. Only pop (apply
+#     and drop) is rebindable, mapped to 'g' below (matching magit 'z g').
+#   - magit 'x' (reset) in reflog and tags panels also cannot be rebound;
+#     lazygit does not expose keybinding config for those panels at all.
+#   - lazygit 'w' (commit without pre-commit hook) has no magit equivalent;
+#     in magit you pass --no-verify via the '-n' infix in the 'c' transient.
+#     'c w' in magit is magit-commit-reword (reword HEAD), not skip-hooks.
+#     Left on lazygit's default 'w'.
 
 gui:
     # Use nerd fonts for icons if available
@@ -32,108 +62,170 @@ os:
 
 keybinding:
     universal:
-        # Emacs-style navigation where lazygit supports it.
-        # C-p/C-n/C-b/C-f aren't available as alt bindings, but
-        # arrow keys work by default. Disable vim j/k/h/l to avoid
-        # accidental navigation when expecting Emacs bindings.
+        # Emacs-style navigation. C-p/C-n move up/down within a panel (like
+        # C-p/C-n in magit sections). C-b/C-f move between panels (like
+        # magit's C-tab / section navigation). Arrow keys also work.
+        # Vim-style j/k/h/l are vacated to avoid conflicts.
         prevItem-alt: <c-p>
         nextItem-alt: <c-n>
         prevBlock-alt: <c-b>
         nextBlock-alt: <c-f>
+        # Scroll the diff view with C-p/C-n (like magit's diff scrolling),
+        # or C-u/C-d for half-page jumps (Emacs convention).
         scrollUpMain-alt1: <c-p>
         scrollDownMain-alt1: <c-n>
         scrollUpMain-alt2: <c-u>
         scrollDownMain-alt2: <c-d>
 
-        # magit uses g for refresh (like magit-refresh)
+        # magit: g = refresh (magit-refresh). Lazygit default is uppercase R.
+        # NOTE: lazygit also uses 'g' as the reset shortcut in several panels
+        # (branches, stash, reflog, tags). Those panels' reset key is
+        # unfortunately unreachable as a result - see unresolvable gaps above.
         refresh: g
 
-        # magit uses ? for help
+        # magit: ? = show help (magit-dispatch / describe-key)
         optionMenu-alt1: '?'
 
+        # Emacs: C-SPC = set-mark-command, which starts a selection region.
+        # Matches the magit/Emacs mental model of marking a range to act on.
+        # Frees up 'v' for revert in the commits panel.
+        toggleRangeSelect: <c-space>
+
     files:
-        # magit: s = stage (replaces lazygit's toggle with explicit stage)
+        # magit: S = stage all (magit-stage-modified).
+        # Lazygit default 'a' toggles all staged/unstaged; this makes S
+        # explicitly stage everything, matching magit muscle memory.
         toggleStagedAll: S
 
-        # magit: c = commit
+        # magit: c c = commit (always opens $EDITOR). Already lazygit default.
         commitChanges: c
+        # No direct magit equivalent: magit's c c always uses $EDITOR, while
+        # lazygit's 'c' uses an inline popup and 'C' forces $EDITOR instead.
         commitChangesWithEditor: C
+        # magit: c a = amend HEAD (opens editor). Already lazygit default A.
         amendLastCommit: A
 
-        # magit: z = stash (magit-stash)
+        # magit: z z = stash everything (magit-stash-both).
+        # Lazygit default is 's', which conflicts with magit's stage binding.
         stashAllChanges: z
+        # magit: z = open stash transient (show stash options popup)
         viewStashOptions: Z
 
-        # magit: k = discard/kill changes
+        # magit: k = discard/kill (magit-discard). In lazygit this directly
+        # discards without an options menu. The options menu (to discard a
+        # whole directory etc.) remains on 'd'.
         confirmDiscard: k
 
-        # magit: x = reset
+        # magit: x = reset (magit-reset). Opens a soft/mixed/hard reset menu.
+        # Lazygit default is 'D' (uppercase).
         viewResetOptions: x
 
-        # magit: F = pull/fetch
+        # magit: f = fetch (no exact magit-files equivalent; closest is 'f u'
+        # in magit's fetch transient)
         fetch: f
 
-        # magit: i = ignore
+        # magit: i = gitignore (magit-gitignore). Already lazygit default.
         ignoreFile: i
 
+        # Filter the file list by status (staged/unstaged/untracked).
+        # No magit equivalent. Default <c-b> is taken by panel navigation above.
+        # <c-q> is free in both lazygit and Emacs conventions.
+        openStatusFilter: <c-q>
+
     branches:
-        # magit: c = checkout (b b in magit, but c is already checkout-by-name)
+        # magit: b b = checkout branch by name (magit-checkout).
+        # Lazygit has no multi-key bindings; 'c' is the closest single-key fit.
         checkoutBranchByName: c
 
-        # magit: r = rebase (already default)
+        # magit: r e = rebase onto branch (magit-rebase-branch). In magit 'r'
+        # alone just opens the rebase transient; there is no single-key equivalent.
         rebaseBranch: r
 
-        # magit: m = merge (M in lazygit default)
+        # magit: m = merge (magit-merge). Lazygit default is uppercase 'M'.
+        # NOTE: this displaces lazygit's "view merge/rebase options" popup
+        # (abort/continue/skip a rebase) which was on 'm' globally. That
+        # popup moves to its global fallback; check '?' if you need it.
         mergeIntoCurrentBranch: m
 
-        # magit: R = rename
+        # magit: r = rename branch (magit-branch-rename). Uppercase to avoid
+        # clash with rebase above.
         renameBranch: R
 
-        # magit: f = fast-forward
+        # magit: F u = fast-forward (magit-pull, then fast-forward-only).
+        # Lazygit 'f' fast-forwards the selected branch from its upstream.
         fastForward: f
 
-        # magit: T = create tag
+        # magit: t t = create tag (magit-tag-create). Tags the selected branch's
+        # HEAD. To manage tags more generally, lazygit has a Tags panel where
+        # 'n' creates a tag, but that panel's keys are not configurable.
         createTag: T
 
-        # magit: d = delete (same concept as magit-branch-delete)
-        # (already default via universal 'd' / remove)
+        # magit: k / b d = delete branch (magit-branch-delete).
+        # Already on lazygit's universal 'd' key - no override needed.
 
-        # forge: create pull request
+        # forge: ' = forge-dispatch (then select "create pull request").
+        # lazygit uses 'o'/'O' as its defaults here; no better single-key
+        # mapping is available since lazygit has no multi-key dispatch.
+        # Note: in magit, 'o' = submodules transient, 'O' = subtree transient.
         createPullRequest: o
         viewPullRequestOptions: O
 
     commits:
-        # magit: r = reword
+        # magit: 'r' in the rebase sequence buffer (git-rebase-reword) rewords
+        # the commit on the current line. From the rebase transient, 'r w'
+        # (magit-rebase-reword-commit) initiates a rebase just to reword one
+        # commit. Already the lazygit default.
         renameCommit: r
+        # No direct magit equivalent for forcing $EDITOR specifically for reword.
         renameCommitWithEditor: R
 
-        # magit: s = squash
+        # magit: 's' in rebase buffer (git-rebase-squash). Already lazygit default.
         squashDown: s
 
-        # magit: f = fixup
+        # magit: 'f' in rebase buffer (git-rebase-fixup). Already lazygit default.
         markCommitAsFixup: f
 
-        # magit: x = reset
+        # magit: x = reset to this commit (magit-reset-*).
+        # Lazygit default is 'g', which is taken by global refresh above.
         viewResetOptions: x
 
-        # magit: A = amend
+        # magit: r m = edit/amend an older commit (magit-rebase-edit-commit).
+        # In lazygit 'A' amends the selected commit (using rebase internally).
         amendToCommit: A
 
-        # magit: t = revert (create revert commit)
-        revertCommit: t
+        # magit: V V = revert (magit-revert-and-commit). Creates a new
+        # "Revert ..." commit without rewriting history. 'v' matches the magit
+        # 'V' transient prefix mnemonic; toggleRangeSelect moved to <c-space>.
+        revertCommit: v
 
-        # magit: v = cherry-pick / paste (apply)
+        # magit: t t = create tag (magit-tag-create). Lazygit default is also
+        # 'T' (uppercase); 't' (lowercase) was previously revert, now freed.
+        tagCommit: t
+
+        # magit: A A = cherry-copy (magit-cherry-copy). In lazygit this is split
+        # into two steps: 'C' to mark a commit, then 'V' to paste (apply) it.
+        # Note: magit uses 'V' for the revert transient, but lazygit uses 'V'
+        # for paste and 'v' (lowercase) for revert — a deliberate inversion.
         cherryPickCopy: C
         pasteCommits: V
 
-        # magit: p = pick (interactive rebase)
+        # magit: 'c' in rebase buffer (git-rebase-pick). Keep commit as-is.
+        # Note: in magit's rebase buffer pick is 'c', not 'p'.
         pickCommit: p
 
-        # magit: e = edit (interactive rebase)
+        # Starts an interactive rebase for all commits on the current branch
+        # back to where it diverged (like magit-rebase-interactive, 'r i').
+        # Already the lazygit default 'i'.
+        # Note: lazygit also has 'e' to start a rebase at the selected commit
+        # specifically; this is unrelated to magit's 'e' (magit-ediff-dwim).
         startInteractiveRebase: i
 
     stash:
-        # magit: a = apply stash
-        # (lazygit uses <space> for apply by default, g for pop)
+        # magit uses 'z' as the stash transient prefix:
+        #   z z = stash (mapped above in files section)
+        #   z p = pop   -> mapped to 'g' here (nearest available key)
+        #   z a = apply (leave in list) -> hardcoded to <space> in lazygit,
+        #         not rebindable; no magit 'z a' equivalent available
+        #   z d = drop  -> lazygit default 'd', unchanged
         popStash: g
         renameStash: r
