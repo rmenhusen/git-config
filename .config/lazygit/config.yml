@@ -10,7 +10,9 @@
 #
 # Key mapping rationale (magit -> lazygit):
 #   g     = refresh       (magit: g, lazygit default: R)
-#   s     = stage         (magit: s, lazygit default: <space> toggle)
+#   s     = stage         (magit: s, but lazygit's stage key is universal
+#           'select' = <space>, which is not rebindable per-panel; 's' is
+#           unbound here since we moved stash off it to 'z')
 #   S     = stage all     (magit: S, lazygit default: a toggle-all)
 #   k     = discard       (magit: k, lazygit default: x via options menu)
 #   x     = reset         (magit: x, lazygit default: g or D depending on panel)
@@ -227,5 +229,9 @@ keybinding:
         #   z a = apply (leave in list) -> hardcoded to <space> in lazygit,
         #         not rebindable; no magit 'z a' equivalent available
         #   z d = drop  -> lazygit default 'd', unchanged
+        #
+        # The stash options popup (opened by Z / viewStashOptions in the files
+        # panel) offers "stash all", "stash staged", "stash unstaged" etc. as a
+        # navigable menu, not single-key bindings — its items cannot be rebound.
         popStash: g
         renameStash: r
