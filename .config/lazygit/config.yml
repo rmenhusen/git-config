@@ -113,9 +113,11 @@ keybinding:
         # magit: z = open stash transient (show stash options popup)
         viewStashOptions: Z
 
-        # magit: k = discard/kill (magit-discard). In lazygit this directly
-        # discards without an options menu. The options menu (to discard a
-        # whole directory etc.) remains on 'd'.
+        # magit: k = discard/kill (magit-discard). In lazygit, 'd' always opens
+        # a discard options menu first; confirmDiscard is the key used *inside
+        # that menu* to select "discard all changes". So you must press 'd' then
+        # 'k', not just 'k' alone. There is no way to discard directly without
+        # the menu - this is weaker than magit's single 'k'.
         confirmDiscard: k
 
         # magit: x = reset (magit-reset). Opens a soft/mixed/hard reset menu.
